@@ -1,4 +1,6 @@
 using System;
+using System.ComponentModel.DataAnnotations;
+using EmployeeManagement.Application.Common.Exceptions;
 using EmployeeManagement.Application.EmployeeItems.Command.Create;
 using EmployeeManagement.Application.EmployeeItems.Command.Delete;
 using EmployeeManagement.Application.EmployeeItems.Command.Update;
@@ -81,6 +83,33 @@ namespace EmployeeManagement.UnitTests
         }
 
         [Fact]
+        public async Task CreateEmployeeInvalidName()
+        {
+            var request = new CreateEmployeeCommand
+            {
+                Name = "John Do3",
+                BaseSalary = 600,
+                EndDate = DateTime.Now
+            };
+
+            await Assert.ThrowsAsync<ValidationException>(() => _createEmployeeCommandHandler.Handle(request, default));
+        }
+
+
+        [Fact]
+        public async Task CreateEmployeeInvalidBaseSalary()
+        {
+            var request = new CreateEmployeeCommand
+            {
+                Name = "John Doe",
+                BaseSalary = -100,
+                EndDate = DateTime.Now
+            };
+
+            await Assert.ThrowsAsync<ValidationException>(() => _createEmployeeCommandHandler.Handle(request, default));
+        }
+
+        [Fact]
         public Task GetFulTimeEmployeeMonthlySalaryValid()
         {
             var requestCreate = new CreateEmployeeCommand
@@ -107,6 +136,22 @@ namespace EmployeeManagement.UnitTests
 
             return Task.CompletedTask;
         }
+
+        [Fact]
+        public async Task GetFullTimeEmployeeSalaryNotFound()
+        {
+            var request = new GetEmployeeSalary
+            {
+                Id = new Guid(),
+                Bonus = 1000,
+                TaxDeduction = 0,
+                NbWorkedHours = null
+            };
+
+            await Assert.ThrowsAsync<EmployeeNotFoundException>(
+                () => _getEmployeeSalaryHandler.Handle(request, default));
+        }
+
         [Fact]
         public Task GetConsultantEmployeeSalaryValid()
         {
@@ -136,6 +181,21 @@ namespace EmployeeManagement.UnitTests
         }
 
         [Fact]
+        public async Task GetConsultantSalaryNotFound()
+        {
+            var request = new GetEmployeeSalary
+            {
+                Id = new Guid(),
+                Bonus = null,
+                TaxDeduction = null,
+                NbWorkedHours = 140
+            };
+
+           await Assert.ThrowsAsync<EmployeeNotFoundException>(() => _getEmployeeSalaryHandler.Handle(request, default));
+        }
+
+
+        [Fact]
         public Task DeleteEmployeeValid()
         {
             var requestCreate = new CreateEmployeeCommand
@@ -158,6 +218,18 @@ namespace EmployeeManagement.UnitTests
             Assert.StrictEqual(Unit.Value, result.Result);
 
             return Task.CompletedTask;
+        }
+
+
+        [Fact]
+        public async Task DeleteEmployeeNotFound()
+        {
+            var request = new DeleteEmployeeCommand
+            {
+                Id = new Guid()
+            };
+
+            await Assert.ThrowsAsync<EmployeeNotFoundException>(() => _deleteEmployeeCommandHandler.Handle(request, default));
         }
 
         [Fact]
@@ -196,6 +268,59 @@ namespace EmployeeManagement.UnitTests
             Assert.StrictEqual(11200, resultSalary.Result.Salary);
 
             return Task.CompletedTask;
+        }
+
+        [Fact]
+        public async Task UpdateEmployeeInvalidName()
+        {
+            var requestCreate = new CreateEmployeeCommand
+            {
+                Name = "Jane Doe",
+                BaseSalary = 75,
+                EndDate = DateTime.Now.AddYears(1)
+            };
+
+            var resultCreate = _createEmployeeCommandHandler.Handle(requestCreate, default);
+
+            var request = new UpdateEmployeeCommand
+            {
+                Id = resultCreate.Result.Id,
+                Name = "John Do3"
+            };
+
+            await Assert.ThrowsAsync<ValidationException>(() => _updateEmployeeCommandHandler.Handle(request, default));
+        }
+
+        [Fact]
+        public async Task UpdateEmployeeInvalidBaseSalary()
+        {
+            var requestCreate = new CreateEmployeeCommand
+            {
+                Name = "Jane Doe",
+                BaseSalary = 75,
+                EndDate = DateTime.Now.AddYears(1)
+            };
+
+            var resultCreate = _createEmployeeCommandHandler.Handle(requestCreate, default);
+
+            var request = new UpdateEmployeeCommand
+            {
+                Id = resultCreate.Result.Id,
+                BaseSalary = -349
+            };
+
+            await Assert.ThrowsAsync<ValidationException>(() => _updateEmployeeCommandHandler.Handle(request, default));
+        }
+        [Fact]
+        public async Task UpdateEmployeeNotFound()
+        {
+            var request = new UpdateEmployeeCommand
+            {
+                Id = new Guid(),
+                BaseSalary = 80,
+            };
+            await Assert.ThrowsAsync<EmployeeNotFoundException>(() =>
+                _updateEmployeeCommandHandler.Handle(request, default));
         }
     }
 }

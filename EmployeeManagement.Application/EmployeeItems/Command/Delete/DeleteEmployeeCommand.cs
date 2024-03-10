@@ -30,6 +30,7 @@ namespace EmployeeManagement.Application.EmployeeItems.Command.Delete
             {
                 var emp = await _dbContext.Employees.FindAsync(request.Id);
                 _ = _dbContext.Employees.Remove(emp);
+                await _dbContext.SaveChangesAsync(cancellationToken);
                 return Unit.Value;
             }
 

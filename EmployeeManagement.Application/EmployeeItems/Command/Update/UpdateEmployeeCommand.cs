@@ -16,8 +16,8 @@ namespace EmployeeManagement.Application.EmployeeItems.Command.Update
     {
         [Required]
         public Guid Id { get; set; }
-        public string Name { get; set; }
-        public double BaseSalary { get; set; }
+        public string? Name { get; set; }
+        public double? BaseSalary { get; set; }
     }
 
     public class UpdateEmployeeCommandHandler : IRequestHandler<UpdateEmployeeCommand, Unit>
@@ -30,24 +30,31 @@ namespace EmployeeManagement.Application.EmployeeItems.Command.Update
         }
         public async Task<Unit> Handle(UpdateEmployeeCommand request, CancellationToken cancellationToken)
         {
+            #region Validation Controls
+
+            if (request.BaseSalary is not null && request.BaseSalary <= 0)
+                throw new ValidationException("Base salary should be greater than 0 !");
+
+            if(request.Name is not null && request.Name.All(char.IsWhiteSpace))
+                throw new ValidationException("Name should not be empty !");
+            
+            if(request.Name is not null && request.Name.Any(char.IsNumber))
+                throw new ValidationException("The employee name should not have numbers !");
+
+            #endregion
+
             if (!_appDbContext.Employees.Any(n => n.Id == request.Id))
                 throw new EmployeeNotFoundException("Not found !");
 
             var emp = await _appDbContext.Employees.FindAsync(request.Id);
 
-            if (!string.IsNullOrEmpty(request.BaseSalary.ToString(CultureInfo.InvariantCulture)) && request.BaseSalary > 0)
-                emp.BaseSalary = request.BaseSalary;
-            else
-            {
-                throw new ValidationException("Base salary should be greater than 0 !");
-            }
+            if (request.BaseSalary is not null && request.BaseSalary > 0)
+                emp!.BaseSalary = (double)request.BaseSalary;
 
-            if(!string.IsNullOrEmpty(request.Name))
+            if(!string.IsNullOrEmpty(request.Name) || !string.IsNullOrWhiteSpace(request.Name))
                 emp.Name = request.Name;
-            else
-            {
-                throw new ValidationException("Name should not be empty !");
-            }
+           
+            
 
             _appDbContext.Employees.Update(emp);
 

@@ -16,8 +16,9 @@ namespace EmployeeManagement.Infrastructure
         {
 
             services.AddDbContext<AppDbContext>(options =>
-                options.UseInMemoryDatabase("EmployeeManagment"));
-            //options.UseSqlServer(configuration.GetConnectionString("DockerDb")));
+                options.UseSqlServer(configuration.GetConnectionString("DockerDb")));
+            //options.UseInMemoryDatabase("EmployeeManagment"));
+
             services.AddScoped<IAppDbContext,AppDbContext>();
         }
     }

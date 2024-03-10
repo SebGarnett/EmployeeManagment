@@ -30,6 +30,16 @@ namespace EmployeeManagement.Application.EmployeeItems.Command.Create
 
         public async Task<EmployeeDto> Handle(CreateEmployeeCommand request, CancellationToken cancellationToken)
         {
+            #region ValidationControls
+
+            if (request.Name.Any(char.IsNumber))
+                throw new ValidationException("The employee name should not have numbers !");
+
+            if (request.BaseSalary <= 0)
+                throw new ValidationException("Base salary should be greater than 0 !");
+
+            #endregion Validation controls
+
             EmployeeDto empDto = null;
             if (request.StartDate is null)
             {

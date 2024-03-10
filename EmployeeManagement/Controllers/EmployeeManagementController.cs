@@ -31,9 +31,9 @@ namespace EmployeeManagement.Controllers
             return Ok(result);
         }
 
-        [HttpGet("employee/getCalculatedEmployeeSalary")]
+        [HttpPost("/employee/calculateEmployeeSalary")]
         [SwaggerResponse(200,"Salary calculated successfully", Type= typeof(EmployeeSalaryDto))]
-        public async Task<ObjectResult> GetCalculatedEmployeeSalary(GetEmployeeSalary command)
+        public async Task<ObjectResult> CalculateEmployeeSalary([FromBody] GetEmployeeSalary command)
         {
             try
             {
@@ -51,7 +51,7 @@ namespace EmployeeManagement.Controllers
             }
         }
 
-        [HttpPut("employee/updateEmployee")]
+        [HttpPut("/employee/updateEmployee")]
         [SwaggerResponse(200, "Employee sucessfully updated")]
         public async Task<IActionResult> UpdateEmployee(UpdateEmployeeCommand command)
         {
@@ -71,7 +71,7 @@ namespace EmployeeManagement.Controllers
         }
 
 
-        [HttpDelete("employee/deleteEmployee")]
+        [HttpDelete("/employee/deleteEmployee/{Id}")]
         [SwaggerResponse(200,"Employee successfully deleted")]
         public async Task<IActionResult> DeleteEmployee(Guid Id)
         {

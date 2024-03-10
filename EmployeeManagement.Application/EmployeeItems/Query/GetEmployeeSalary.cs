@@ -42,6 +42,8 @@ namespace EmployeeManagement.Application.EmployeeItems.Query
                     emp.BaseSalary = (emp.BaseSalary - request.TaxDeduction ?? 0) * 30 + request.Bonus ?? 0; // FullTime = base de 30 jours travaillés pour simplifier
                     return EmployeeSalaryDto.FromEmployeeEntity(emp);
                 case 'C':
+                    if (request.NbWorkedHours is null)
+                        throw new ValidationException("NbWorkedHours should not be null for a consultant !");
                     if (request.NbWorkedHours <= 0)
                         throw new ValidationException("NbWorkedHours should be greater than 0 !");
 
