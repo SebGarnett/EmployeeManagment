@@ -61,6 +61,34 @@ namespace EmployeeManagement.IntegrationTests
         }
 
         [Fact]
+        public async Task CreateEmployeeInvalidName()
+        {
+            var request = new CreateEmployeeCommand
+            {
+                Name = "John Do3",
+                BaseSalary = 2000,
+                EndDate = DateTime.Now.AddMonths(9)
+            };
+
+            var result = await _httpClient.PostAsJsonAsync("/employee/createEmployee", request);
+            Assert.StrictEqual(HttpStatusCode.BadRequest, result.StatusCode);
+        }
+
+        [Fact]
+        public async Task CreateEmployeeInvalidSalary()
+        {
+            var request = new CreateEmployeeCommand
+            {
+                Name = "John Doe",
+                BaseSalary = -100,
+                EndDate = DateTime.Now.AddMonths(9)
+            };
+
+            var result = await _httpClient.PostAsJsonAsync("/employee/createEmployee", request);
+            Assert.StrictEqual(HttpStatusCode.BadRequest, result.StatusCode);
+        }
+
+        [Fact]
         public async Task CalculateFullTimeEmployeeSalaryValid()
         {
             var request = new CreateEmployeeCommand
@@ -93,6 +121,23 @@ namespace EmployeeManagement.IntegrationTests
 
 
             _ = await _httpClient.DeleteAsync($"/employee/deleteEmployee/{calcResponse.Id}");
+        }
+
+        [Fact]
+        public async Task CalculateEmployeeSalaryNotFound()
+        {
+            var requestCalc = new GetEmployeeSalary
+            {
+                Id = new Guid(),
+                Bonus = 1000,
+                TaxDeduction = 350
+            };
+
+            var resultCalc = await _httpClient.PostAsJsonAsync("/employee/calculateEmployeeSalary", requestCalc);
+
+            Assert.StrictEqual(HttpStatusCode.NotFound, resultCalc.StatusCode);
+
+
         }
 
         [Fact]
@@ -160,6 +205,78 @@ namespace EmployeeManagement.IntegrationTests
         }
 
         [Fact]
+        public async Task UpdateEmployeeNotFound()
+        {
+            var requestUpdate = new UpdateEmployeeCommand
+            {
+                Id = new Guid(),
+                Name = "Jane Doe"
+            };
+
+            var resultUpdate = await _httpClient.PutAsJsonAsync("/employee/updateEmployee", requestUpdate);
+
+            Assert.StrictEqual(HttpStatusCode.NotFound, resultUpdate.StatusCode);
+        }
+
+        [Fact]
+        public async Task UpdateEmployeeInvalidName()
+        {
+            var request = new CreateEmployeeCommand
+            {
+                Name = "John Doe",
+                BaseSalary = 85,
+                EndDate = DateTime.Now.AddMonths(10)
+            };
+
+            var result = await _httpClient.PostAsJsonAsync("/employee/createEmployee", request);
+
+            result.EnsureSuccessStatusCode();
+
+            var employeeResponse = await result.Content.ReadFromJsonAsync<EmployeeDto>();
+            Assert.NotNull(employeeResponse);
+
+            var requestUpdate = new UpdateEmployeeCommand
+            {
+                Id = employeeResponse.Id,
+                Name = "Jane Do3"
+            };
+
+            var resultUpdate = await _httpClient.PutAsJsonAsync("/employee/updateEmployee", requestUpdate);
+            Assert.StrictEqual(HttpStatusCode.BadRequest, resultUpdate.StatusCode);
+
+            _ = await _httpClient.DeleteAsync($"/employee/deleteEmployee/{employeeResponse.Id}");
+        }
+
+        [Fact]
+        public async Task UpdateEmployeeInvalidBaseSalary()
+        {
+            var request = new CreateEmployeeCommand
+            {
+                Name = "John Doe",
+                BaseSalary = 85,
+                EndDate = DateTime.Now.AddMonths(10)
+            };
+
+            var result = await _httpClient.PostAsJsonAsync("/employee/createEmployee", request);
+
+            result.EnsureSuccessStatusCode();
+
+            var employeeResponse = await result.Content.ReadFromJsonAsync<EmployeeDto>();
+            Assert.NotNull(employeeResponse);
+
+            var requestUpdate = new UpdateEmployeeCommand
+            {
+                Id = employeeResponse.Id,
+                BaseSalary = -100
+            };
+
+            var resultUpdate = await _httpClient.PutAsJsonAsync("/employee/updateEmployee", requestUpdate);
+            Assert.StrictEqual(HttpStatusCode.BadRequest, resultUpdate.StatusCode);
+
+            _ = await _httpClient.DeleteAsync($"/employee/deleteEmployee/{employeeResponse.Id}");
+        }
+
+        [Fact]
         public async Task DeleteEmployeeValid()
         {
             var request = new CreateEmployeeCommand
@@ -178,6 +295,13 @@ namespace EmployeeManagement.IntegrationTests
 
             var resultDelete = await _httpClient.DeleteAsync($"/employee/deleteEmployee/{employeeResponse.Id}");
             Assert.StrictEqual(HttpStatusCode.OK, result.StatusCode);
+        }
+
+        [Fact]
+        public async Task DeleteEmployeeNotFound()
+        {
+            var resultDelete = await _httpClient.DeleteAsync($"/employee/deleteEmployee/{new Guid()}");
+            Assert.StrictEqual(HttpStatusCode.NotFound, resultDelete.StatusCode);
         }
     }
 }

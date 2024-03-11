@@ -38,9 +38,12 @@ namespace EmployeeManagement.Application.EmployeeItems.Command.Create
             if (request.BaseSalary <= 0)
                 throw new ValidationException("Base salary should be greater than 0 !");
 
+            if (request.EndDate < DateTime.Now)
+                throw new ValidationException("Employee's end date should be greater than today's date !");
+
             #endregion Validation controls
 
-            EmployeeDto empDto = null;
+            EmployeeDto? empDto = null;
             if (request.StartDate is null)
             {
                 //Consultant
@@ -73,7 +76,6 @@ namespace EmployeeManagement.Application.EmployeeItems.Command.Create
 
             await _dbContext.SaveChangesAsync(cancellationToken);
 
-            //todo controler les valeurs dans la request pour la sécurité
             return empDto;
         }
     }

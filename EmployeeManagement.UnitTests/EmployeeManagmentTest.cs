@@ -63,7 +63,7 @@ namespace EmployeeManagement.UnitTests
             {
                 Name = "John Doe",
                 BaseSalary = 600,
-                EndDate = DateTime.Now
+                EndDate = DateTime.Now.AddMonths(9)
             };
 
             var result = _createEmployeeCommandHandler.Handle(request, default);

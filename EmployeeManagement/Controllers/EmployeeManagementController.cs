@@ -27,8 +27,16 @@ namespace EmployeeManagement.Controllers
         [SwaggerResponse(200, "Employee created successfully", Type = typeof(EmployeeDto))]
         public async Task<ObjectResult> Create(CreateEmployeeCommand command)
         {
-            var result = await Mediator.Send(command);
-            return Ok(result);
+            try
+            {
+                var result = await Mediator.Send(command);
+                return Ok(result);
+            }
+            catch (ValidationException ex)
+            {
+
+                return BadRequest(ex.Message);
+            }
         }
 
         [HttpPost("/employee/calculateEmployeeSalary")]
