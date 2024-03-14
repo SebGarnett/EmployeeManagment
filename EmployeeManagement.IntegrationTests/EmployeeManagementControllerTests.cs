@@ -1,23 +1,43 @@
 using System.Net;
+using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using EmployeeManagement.API.Models;
 using EmployeeManagement.Application.EmployeeItems.Command.Create;
 using EmployeeManagement.Application.EmployeeItems.Command.Update;
 using EmployeeManagement.Application.EmployeeItems.Dtos;
 using EmployeeManagement.Application.EmployeeItems.Query;
 using EmployeeManagement.Domain.Entities;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Identity.Data;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace EmployeeManagement.IntegrationTests
 {
-    public class EmployeeManagementControllerTests
+    public class EmployeeManagementControllerTests : IClassFixture<WebApplicationFactory<Program>>
     {
         private readonly HttpClient _httpClient;
+        private readonly WebApplicationFactory<Program> _app;
 
-        public EmployeeManagementControllerTests()
+        public EmployeeManagementControllerTests(WebApplicationFactory<Program> app)
         {
-            var webAppClientFactory = new WebApplicationFactory<Program>();
-            _httpClient = webAppClientFactory.CreateClient();
+            _app = app;
+            _httpClient = _app.CreateClient();
+            var token = ApiLogin(new LoginModel { Username = "Test", Password = "TestPassword" });
+            _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
         }
+
+        private string ApiLogin(LoginModel loginModel)
+        {
+            var resultLogin =  _httpClient.PostAsJsonAsync("/auth/login", loginModel).Result;
+            resultLogin.EnsureSuccessStatusCode();
+
+            var loginResponse =  resultLogin.Content.ReadFromJsonAsync<Login>().Result;
+            return loginResponse!.token;
+        }
+
+
         [Fact]
         public async Task CreateFullTimeEmployeeValid()
         {
@@ -107,7 +127,7 @@ namespace EmployeeManagement.IntegrationTests
 
             var requestCalc = new GetEmployeeSalary
             {
-                Id = employeeResponse.Id,
+                Id = employeeResponse!.Id,
                 Bonus = 1000,
                 TaxDeduction = 350
             };
@@ -303,5 +323,10 @@ namespace EmployeeManagement.IntegrationTests
             var resultDelete = await _httpClient.DeleteAsync($"/employee/deleteEmployee/{new Guid()}");
             Assert.StrictEqual(HttpStatusCode.NotFound, resultDelete.StatusCode);
         }
+    }
+
+    public record Login
+    {
+        public string token { get; set; }
     }
 }

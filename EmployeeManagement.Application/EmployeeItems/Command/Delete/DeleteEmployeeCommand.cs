@@ -29,7 +29,7 @@ namespace EmployeeManagement.Application.EmployeeItems.Command.Delete
             if (_dbContext.Employees.Any(n => n.Id == request.Id))
             {
                 var emp = await _dbContext.Employees.FindAsync(request.Id);
-                _ = _dbContext.Employees.Remove(emp);
+                _ = _dbContext.Employees.Remove(emp!);
                 await _dbContext.SaveChangesAsync(cancellationToken);
                 return Unit.Value;
             }
